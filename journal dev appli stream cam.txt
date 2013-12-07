@@ -1,0 +1,2 @@
+2013 12 07 :
+first commit : able to get version of cam within console
