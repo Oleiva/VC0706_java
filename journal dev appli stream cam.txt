@@ -1,2 +1,107 @@
 2013 12 07 :
 first commit : able to get version of cam within console
+
+2013 12 11 :
+able to get answer from camera in byte or String in main
+2013 12 12 :
+today version saved : slow picture download working !
+2013 12 13 :
+today version saved : working app for 1 shot at 115kbds
+able to handle starting the camera at 38 kbds or 115kbds and make multiple retries for good file lentgh reading
+minimum testing to ensure best latencies compromises to ensures minimum quality of data downloaded
+
+2013 12 14 :
+used turtle http server example : seems to be enough simple for me
+infinte loop on VC0706_stream doesn't work : best is 1 frame / 5.
+To be tested : implement DMA use : 2013 12 13 to be used
+
+2013 12 15 :
+evrlasting picture taking IS WORKING !!! saved under 2013 12 15 VC0706_java continous take.zip
+the issue was with the non re-initialisation of iostreams during connection/reconnection to camera
+no way to take everlsating picture without disconnection, this means 1 fps max ;-(
+using the TurtleMeatSimpleHttpServer modified server
+
+2013 12 16:
+a good track to implement simple jpg streaming : 
+implement a class from vc0706 and call its getbufferedoutputstream method, this has to be implemented of course
+then construct html page with enw data in bufferedinput stream
+
+2013 12 19:
+trying to stream the output file from VC0706 java program through a "simple" node.js http server : 
+http://nodejs.developpez.com/tutoriels/javascript/node-js-livre-debutant/
+struggling within the mod displaying an image
+exec method not tested yet, anyway VC0706 java program has to be modified to return the image
+
+2013 12 21:
+struggling with the output of vc0706 java app : need to output a correct streal within node app,
+ perhaps using those links :
+ http://www.avajava.com/tutorials/lessons/how-do-i-write-the-contents-of-a-file-to-standard-output.html
+ http://stackoverflow.com/questions/4405078/how-to-write-to-standard-output-using-bufferedwriter
+ http://brentscode.wordpress.com/2013/01/29/controlling-java-from-node-js-a-simple-json-based-rpc-protocol/
+ http://maxogden.com/node-streams.html
+ http://codewinds.com/blog/2013-08-19-nodejs-writable-streams.html
+ http://naholyr.fr/2013/01/stream/
+ 
+ 2013 12 22:
+ key is from jar program output : needed to use correctly system.out command
+ reached to have some data in test jpg node
+ 3 issues : image not correctly handled (need to parse somewhere), everything is trhown out system.out, auto refresh not working
+ 
+  2013 12 23:
+  VC0706 java app cleaned up but no way to add start or end of data ... 
+  maybe using that ? https://github.com/Benvie/reified
+  key of the search for dtreaming :
+  a push server in node.js
+  3 links looks good :
+  http://blog.marcon.me/post/31143865164/send-images-through-websockets, see also comments
+  http://weblogs.asp.net/dwahlin/archive/2013/06/04/building-an-html5-web-sockets-server-with-node-js.aspx
+  http://stackoverflow.com/questions/4074569/need-simple-data-push-to-browser-using-node-js
+  http://www.gianlucaguarini.com/blog/nodejs-and-a-simple-push-notification-server/
+  http://tomkersten.com/articles/server-sent-events-with-node/
+  
+  
+  2013 12 26:
+  node.io is definitively what I need, struggling to have a working example :
+  http://blog.nodeknockout.com/post/34243127010/knocking-out-socket-io
+  http://www.williammora.com/2013/03/nodejs-tutorial-building-chatroom-with.html
+  http://www.davidpirek.com/blog/loading-images-via-websockets-in-nodejs
+  http://isolasoftware.it/2012/04/23/beaglebone-and-websockets-a-full-example-that-turn-onoff-a-led/
+  
+    2013 12 27:
+    This one help me to implement the push 
+      http://blog.nodeknockout.com/post/34243127010/knocking-out-socket-io
+      difficulties to send properly the data and format it to jpg, the JAVA app should send it in base64 already :
+base 64 tutos :
+http://stackoverflow.com/questions/13109588/base64-encoding-in-java
+http://furie.be/news/22/15/Encoder-une-chaine-en-Base64-sous-Java.html
+http://www.wikihow.com/Encode-a-String-to-Base64-With-Java
+http://www.source-code.biz/base64coder/java/      
+      
+tip : run -g with npm install to install it GLOBALLY
+
+The following push example one need to be tested AS IS
+http://stackoverflow.com/questions/6208234/javascript-draw-image-into-html-from-buffer-nodejs-socket-io
+
+Then whe should need the help of : http://stackoverflow.com/questions/934012/get-image-data-in-javascript
+
+    2013 12 29:
+html tip to write an image :
+     res.writeHead(200, {'Content-Type': 'image/gif' });
+     res.end(img, 'binary');
+     
+Should try JSON with "ws" node module     https://github.com/einaros/ws
+and/or http://blog.marcon.me/post/31143865164/send-images-through-websockets
+
+    2013 12 31:
+    success in streaming data to browser using http://blog.marcon.me/post/31143865164/send-images-through-websockets
+need to : 
+proper cast data and customize web page    
+clean up jar to  : remove inconsistent stdout, output base 64 image
+
+inconstient stdout removed ("wait for byte error"), no need to remove RxTx version display because only at startup
+
+2014 01 01 (happy new year)
+generate a JAr providing base64 output using the following tip :
+http://myjeeva.com/how-to-convert-image-to-string-and-string-to-image-in-java.html
+
+no changes :-(

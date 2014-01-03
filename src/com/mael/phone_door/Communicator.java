@@ -3,35 +3,49 @@
  * and open the template in the editor.
  */
 
+package com.mael.phone_door;
 
+import gnu.io.CommPort;
+import gnu.io.CommPortIdentifier;
+import gnu.io.PortInUseException;
+import gnu.io.SerialPort;
+import gnu.io.SerialPortEvent;
+import gnu.io.SerialPortEventListener;
 
-import gnu.io.*;
-
-import java.awt.Color;
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.TooManyListenersException;
+import java.util.concurrent.TimeUnit;
 
 public class Communicator implements SerialPortEventListener
 {
-    //passed from main GUI
-  //  GUI window = null;
 
     //for containing the ports that will be found
-    private Enumeration ports = null;
+    @SuppressWarnings("rawtypes")
+	private Enumeration ports = null;
     //map the port names to CommPortIdentifiers
-    private HashMap portMap = new HashMap();
+    @SuppressWarnings("rawtypes")
+	private HashMap portMap = new HashMap();
 
     //this is the object that contains the opened port
     private CommPortIdentifier selectedPortIdentifier = null;
     private SerialPort serialPort = null;
 
-    //input and output streams for sending and receiving data
+    //input and output streams for sending and receiving data, buffer for reading
     private InputStream input = null;
     private OutputStream output = null;
+    private byte[] readBuffer = new byte[10240]; //10k buffer with 8k effective
+    private int buffersize = 10240; //10k buffer with 8k effective
+    private int HW_inputbuffer = 16384; //16k HW buffer, used for Beaglebone Black, set it lower depending your use
+    private int buffertoread = 0;
+    private BufferedInputStream is;
+    private BufferedReader reader;
 
     //just a boolean flag that i use for enabling
     //and disabling buttons depending on whether the program
@@ -53,15 +67,12 @@ public class Communicator implements SerialPortEventListener
     // add constructor without GUI
     public Communicator()
     {
-
     }
-
-  
-
     //search for all the serial ports
     //pre: none
     //post: adds all the found ports to a combo box on the GUI
-    public void searchForPorts()
+    @SuppressWarnings("unchecked")
+	public void searchForPorts()
     {
         ports = CommPortIdentifier.getPortIdentifiers();
 
@@ -78,54 +89,6 @@ public class Communicator implements SerialPortEventListener
         }
     }
 
-    //connect to the selected port in the combo box
-    //pre: ports are already found by using the searchForPorts method
-    //post: the connected comm port is stored in commPort, otherwise,
-    //an exception is generated
- /*   public void connect()
-    {
-        String selectedPort = (String)window.cboxPorts.getSelectedItem();
-        selectedPortIdentifier = (CommPortIdentifier)portMap.get(selectedPort);
-
-        CommPort commPort = null;
-
-        try
-        {
-            //the method below returns an object of type CommPort
-            commPort = selectedPortIdentifier.open("TigerControlPanel", TIMEOUT);
-            //the CommPort object can be casted to a SerialPort object
-            serialPort = (SerialPort)commPort;
-
-            //for controlling GUI elements
-            setConnected(true);
-
-            //logging
-            logText = selectedPort + " opened successfully.";
-            window.txtLog.setForeground(Color.black);
-            window.txtLog.append(logText + "\n");
-
-            //CODE ON SETTING BAUD RATE ETC OMITTED
-            //XBEE PAIR ASSUMED TO HAVE SAME SETTINGS ALREADY
-
-            //enables the controls on the GUI if a successful connection is made
-            window.keybindingController.toggleControls();
-        }
-        catch (PortInUseException e)
-        {
-            logText = selectedPort + " is in use. (" + e.toString() + ")";
-            
-            window.txtLog.setForeground(Color.RED);
-            window.txtLog.append(logText + "\n");
-        }
-        catch (Exception e)
-        {
-            logText = "Failed to open " + selectedPort + "(" + e.toString() + ")";
-            window.txtLog.append(logText + "\n");
-            window.txtLog.setForeground(Color.RED);
-        }
-    }
-    
-    */
     // adding connection function with COM port as a parameter and settings
     //connect to the selected port in the combo box
     //pre: ports are already found by using the searchForPorts method
@@ -144,24 +107,19 @@ public class Communicator implements SerialPortEventListener
         try
         {
             //the method below returns an object of type CommPort
-            commPort = selectedPortIdentifier.open("TigerControlPanel", TIMEOUT);
+            commPort = selectedPortIdentifier.open("COM", TIMEOUT);
             //the CommPort object can be casted to a SerialPort object
             serialPort = (SerialPort)commPort;
-            serialPort.setSerialPortParams(baudrate,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);  
+            serialPort.setSerialPortParams(baudrate,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.PARITY_NONE);
+            serialPort.setInputBufferSize(buffersize);
             //for controlling GUI elements
             setConnected(true);
-
             //logging
             logText = selectedPort + " opened successfully.";
-    
-            //CODE ON SETTING BAUD RATE ETC OMITTED
-            //XBEE PAIR ASSUMED TO HAVE SAME SETTINGS ALREADY
-
         }
         catch (PortInUseException e)
         {
-            logText = selectedPort + " is in use. (" + e.toString() + ")";
-            
+            logText = selectedPort + " is in use. (" + e.toString() + ")";            
         }
         catch (Exception e)
         {
@@ -169,24 +127,18 @@ public class Communicator implements SerialPortEventListener
         }
     }
     
-
-    
-    
-    
     //open the input and output streams
-    //pre: an open port
-    //post: initialized input and output streams for use to communicate data
     public boolean initIOStream()
     {
         //return value for whather opening the streams is successful or not
         boolean successful = false;
-
         try {
             //
             input = serialPort.getInputStream();
             output = serialPort.getOutputStream();
-            writeData(0, 0);
-            
+            is = new BufferedInputStream(is);
+            reader = new BufferedReader(new InputStreamReader(is));
+            serialPort.setInputBufferSize( HW_inputbuffer ); 
             successful = true;
             return successful;
         }
@@ -205,29 +157,27 @@ public class Communicator implements SerialPortEventListener
         try
         {
             serialPort.addEventListener(this);
-            serialPort.notifyOnDataAvailable(true);
-    
+            serialPort.notifyOnDataAvailable(true); //disable event listener
+            
         }
         catch (TooManyListenersException e)
         {
             logText = "Too many listeners. (" + e.toString() + ")";
         }
+        
     }
 
     //disconnect the serial port
-    //pre: an open serial port
-    //post: clsoed serial port
     public void disconnect()
     {
-        //close the serial port
         try
         {
-            writeData(0, 0);
-
             serialPort.removeEventListener();
             serialPort.close();
             input.close();
             output.close();
+            is.close();
+            reader.close();
             setConnected(false);
     
             logText = "Disconnected.";
@@ -254,29 +204,9 @@ public class Communicator implements SerialPortEventListener
     public void serialEvent(SerialPortEvent evt) {
         if (evt.getEventType() == SerialPortEvent.DATA_AVAILABLE)
         {
-            System.out.println("received something"); 
-        	try
-            {
-                byte singleData = (byte)input.read();
-                logText = new String(new byte[] {singleData});
-                System.out.println(new String(new byte[] {singleData})); 
-                if (singleData != NEW_LINE_ASCII)
-                {
-                    logText = new String(new byte[] {singleData});
-                    System.out.println(new String(new byte[] {singleData})); 
-
-
-                }
-                else
-                {
-
-                }
-            }
-            catch (Exception e)
-            {
-                logText = "Failed to read data. (" + e.toString() + ")";
-            }
+        //	readSerial();
         }
+   
     }
 
     //method that can be called to send data
@@ -304,22 +234,18 @@ public class Communicator implements SerialPortEventListener
 
         }
     }
+
     // add byte sending capacity
     //method that can be called to send data
-    //pre: open serial port
-    //post: data sent to the other device
-    public void writebytes(byte[] data)
+    public void writebytes(byte[] data,int returnlentgh)
     {
+    	buffertoread = returnlentgh;
         try
         {
         	for (int i=0; i < data.length; i++){
         		output.write(data[i]);
         		output.flush();
-        		System.out.println("sent step " + i);
-            //this is a delimiter for the data
-        //		output.write(DASH_ASCII);
-        	//	output.flush();
-            
+//        		System.out.println("sent step " + i);
         	}	
         }
         catch (Exception e)
@@ -328,5 +254,56 @@ public class Communicator implements SerialPortEventListener
 
         }
     }
+ 
+    @SuppressWarnings("resource")
+
+    String convertStreamToString(java.io.InputStream is) {
+        java.util.Scanner s = new java.util.Scanner(is).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
+    }
+      
+    byte[] readSerial() {
+    	
+        		try {
+        	//sleep(2); // let the time to the camera to answer, otherwise the  buffer will be field with bad data
+        	waitForBytes(buffertoread);
+            
+                // Read the serial port
+                input.read(readBuffer, 0, buffertoread);
+                
+                // Print it out
+      //          System.out.println("in read function                     " + new String(readBuffer, 0, buffertoread));
+                return readBuffer;
+            
+        } catch (IOException e) {
+        }
+        return readBuffer;
+    }
     
+    private void waitForBytes(int numBytes) {
+    	try {
+			while (( is.available()) <  buffertoread) sleep(1);
+		} catch (IOException e) {
+	//		System.out.println("waitForBytes error " + e);;
+		}
+    }
+    
+    public int available() throws Throwable  {
+       
+
+    	try {
+            return is.available();
+        } catch (IOException e) {
+            throw new Exception(e);
+        }
+    }
+    
+    public void sleep(long millis) {
+        try {
+            TimeUnit.MILLISECONDS.sleep(millis);
+        } catch (InterruptedException e) {
+        	System.out.println("Sleep interrupted " + e);
+        }
+    }
+       
 }
