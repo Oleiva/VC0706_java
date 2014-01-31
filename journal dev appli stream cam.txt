@@ -47,7 +47,7 @@ struggling with the output of vc0706 java app : need to output a correct streal 
  reached to have some data in test jpg node
  3 issues : image not correctly handled (need to parse somewhere), everything is trhown out system.out, auto refresh not working
  
-  2013 12 23:
+ 2013 12 23:
   VC0706 java app cleaned up but no way to add start or end of data ... 
   maybe using that ? https://github.com/Benvie/reified
   key of the search for dtreaming :
@@ -60,7 +60,7 @@ struggling with the output of vc0706 java app : need to output a correct streal 
   http://tomkersten.com/articles/server-sent-events-with-node/
   
   
-  2013 12 26:
+ 2013 12 26:
   node.io is definitively what I need, struggling to have a working example :
   http://blog.nodeknockout.com/post/34243127010/knocking-out-socket-io
   http://www.williammora.com/2013/03/nodejs-tutorial-building-chatroom-with.html
@@ -105,3 +105,60 @@ generate a JAr providing base64 output using the following tip :
 http://myjeeva.com/how-to-convert-image-to-string-and-string-to-image-in-java.html
 
 no changes :-(
+
+2014 01 06:
+change again PC, reinstall node, eclipse and so on....
+try http://phoboslab.org/log/2013/09/html5-live-video-streaming-via-websockets, not suitable for me
+seems to be better insisting in modifying chat app
+
+explanation of the $ sign use, it's a "JQUERY shortcut"
+http://stackoverflow.com/questions/846585/can-someone-explain-the-dollar-sign-in-javascript
+http://stackoverflow.com/questions/205853/why-would-a-javascript-variable-start-with-a-dollar-sign
+
+should also try this one : https://github.com/binaryjs/binaryjs
+and maybe this : http://stackoverflow.com/questions/9540978/nodejs-how-to-read-and-output-jpg-image
+
+2014 01 07:
+reach to send the binary data trhough html page (using "test jpg 2" project)
+directly converted the binary data in base64 within node app
+need to go deeeper in this project
+
+2014 01 08 :
+using  https://github.com/whichlight/kinect-browser-stream, reach to stream data, still not the good format : 
+the canvas is resfreshed but inconsistent data
+
+2014 01 09:
+it looks that the message displayed in chrome console is the key
+"Resource interpreted as Script but transferred with MIME type text/plain: "http://localhost:3000/bundle.js".
+The socket.on console.log message whithin client.js is not displayed, but the console.log("connected") on the same file is displayed
+need to go deeper
+
+2014 01 10:
+after trying to write data in node, it seems that somethings wrong within the JAR
+maybe the JAR has to print out an output stream
+
+2014 01 11:
+the output stream was the key : node is now able to save a jpg file which looks as a jpg
+nut the image is not fully good
+
+2014 01 13 : 
+could be util for java stdio :
+http://www.coderanch.com/t/458822//java/pipe-data-stdout-windows
+
+struggling to understand why node interpret "?" as "." and few other characters
+stdout from jar verified inconsole and identical to the one seen with debugger in Eclipse
+
+2014 01 14 :
+stdout data forced to binary within node.js, jar file already set to binary
+to test 
+
+2014 01 15 :
+by logging into console stdout type : it looks like "undefined"
+default looks to be utf8, should do it ? 
+
+2014 01 16 :
+
+stabilised nod app within "kinect" project with vc0706.jar. The jar file has a binary output and write the jpg file to the working dir
+
+2014 01 30 :
+modified vc0706 to get the port number as a parameter, not working yet

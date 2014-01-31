@@ -1,3 +1,5 @@
+
+
 package com.mael.phone_door;
 
 import java.io.ByteArrayInputStream;
@@ -21,15 +23,18 @@ static int jpglen = 0;
 
 //Communicator object
 //Communicator communicator = null;
- static Communicator camera = new Communicator();
+public static Communicator camera = new Communicator();
 
 public static void main(String args[]) {
 	
-	@SuppressWarnings("unused")
-	String port = "COM3";  /*	if (args[1] != null) {	port = args[1];} 	else {port ="COM3" ;}
+/*	@SuppressWarnings("unused")
+	//String port = "COM3";  
 	*/
+	String port ; //= "56163"  
+	if (args.length > 0) {	port = args[0];} 	else {port ="COM3";}
+	
 	camera.searchForPorts(); // if removed the port number below is unknown on the function "connect"...
-	camera.connect("COM3",115200);
+	camera.connect(port,115200);
 	
 //	System.out.println("connected" + camera.getConnected());
       if (camera.getConnected() == true)
@@ -49,7 +54,7 @@ public static void main(String args[]) {
   if (!conn_115200) {
     	  camera.disconnect();
       sleep(20);
-      camera.connect("COM3",38400);
+      camera.connect(port,38400);
   	
   //	System.out.println("connected" + camera.getConnected());
         if (camera.getConnected() == true)
@@ -61,8 +66,7 @@ public static void main(String args[]) {
             }
         }
       sleep(20);
-      boolean conn_38400 = getVersion(); // check 115bds a faire
-  //    System.out.println("getversion result  at 38400 bds" + conn_38400 );
+      boolean conn_38400 = getVersion(); 
       camera.sleep(10);
       
       ChangeBaudRate(115200);
@@ -70,7 +74,7 @@ public static void main(String args[]) {
     	  sleep(5);
     	  camera.disconnect();
       sleep(100);
-      camera.connect("COM3",115200);
+      camera.connect(port,115200);
   	
 //  	System.out.println("connected" + camera.getConnected());
         if (camera.getConnected() == true)
@@ -89,48 +93,54 @@ public static void main(String args[]) {
 /********* end of init phase *******************/        
         
 /***********  settings phase *******************/
-// Set the picture size - you can choose one of 640x480, 320x240 or 160x120 
-     // Remember that bigger pictures take longer to transmit!
-     //setImageSize(VC0706_640x480);        // biggest
-     //        
+// setImageSize and getImageSize function not working
+     //setImageSize(VC0706_640x480);        // biggest       
  //       boolean b = setImageSize(VC0706_320x240);// medium
         	//	setImageSize(VC0706_160x120);          // small
   //      camera.sleep(100); //sleep cannot be included into set image size as it be after the command
-  //      System.out.println("setImageSize result " + b); // Doesn't work, so bypassed       
-/*        int imgsize = getImageSize();
-        
-        System.out.println("getImageSize vu dans stream_cam " + imgsize);
-  */           
- 
-     
-      
-     
-     
+  //      System.out.println("setImageSize result " + b); 
+//        int imgsize = getImageSize();
+         
       TVoff();
       camera.sleep(1);
-      boolean comp = setCompression((byte) 0x99); // quite high but in line with requirements, may be to put as an rg ?
+      boolean comp = setCompression((byte) 0x99); // quite high but in line with my requirements, may be to put as an arg ?
  //     System.out.println("compression " + comp);
       camera.sleep(1);
       resumeVideo(); 
-        
+       ByteArrayOutputStream bos = new ByteArrayOutputStream(); 
       
 /***********  END of settings phase ************/        
   		int nb_image = 1;
+  		byte[] a = new byte[0];
   		while (nb_image >0){
   			nb_image++;
-
-  		/*
-  			byte[] a = new byte[0];
-  			a = CaptureBase64();
-  		*/	//PrintStream ps = new PrintStream(a);
-  			String a = CaptureBase64();
-  			System.out.print(a);
-			System.out.flush();
-  			
-          
+  			bos.reset();
+  			a = Capture();
+ // 			a = CaptureBase64(); // uncomment to set base 64 output		
+	// write bytes to bos ...
+			bos.write(a, 0, a.length);
+			System.out.print(bos);
+//  			System.out.println(a.toString());
+			System.out.flush();	
+	//		System.out.println(new String(a));
+	
+	
+			FileOutputStream fileOuputStream;		        
+			try { 
+		  		    //convert array of bytes into file 
+		  		   fileOuputStream = new FileOutputStream(".\\IMAGE.jpg");  
+		  		    fileOuputStream.write(a);
+		  		    fileOuputStream.close();
+		 // 		   System.out.println("written");
+		 
+				} catch (Exception e) {
+					e.printStackTrace();
+					}		
+			
+// 		captureAndSave(nb_image); //uncomment to save images to disk, auto incrementation
           camera.disconnect();
           sleep(300);
-          camera.connect("COM3",115200);
+          camera.connect(port,115200);
  //    		System.out.println("connected" + camera.getConnected());
       		if (camera.getConnected() == true)
      			{//  System.out.println("connected");
@@ -141,28 +151,24 @@ public static void main(String args[]) {
             }
         }
     
-    		sleep(10);
-       conn_115200 = getVersion();  
        sleep(10);
-      //  System.out.println("get version at 115200 bds result " + conn_115200 );
-   
-  		}
-  		
+       conn_115200 = getVersion();  
+       sleep(10);  
+  		}		
 }
 /**************** Functions *******/
 
-static boolean connect() {
-	camera.connect("COM3",115200);
+public static boolean connect(String p) {
+	camera.connect(p,115200);
 	return true;
 }
-
 
 static boolean disconnect() {
 	camera.disconnect();
 	return true;
 }
 static void captureAndSave(int numimage) {
-	//	int nb_image = numimage;
+		int nb_image = numimage;
       	long time = System.currentTimeMillis();
       	jpglen = 30000;
   		
@@ -182,13 +188,13 @@ static void captureAndSave(int numimage) {
         byte[] bufferfile = {(byte) 0x00};// 
 
         bufferfile = readImageData(jpglen,8192); //never reach above, thus it is a compromise 
-   /*      camera.sleep(2);
+         camera.sleep(2);
         
         FileOutputStream fileOuputStream;
         
   		try { 
-  		    //convert array of bytes into file
-  		   fileOuputStream = new FileOutputStream("K:\\mes_docs\\Mael\\android_app_sdk\\eclise workspace\\TurtleMeatSimpleHttpServer\\temp\\cupajoe.jpg");  //"C:\\tmp\\image"+nb_image+".jpg");
+  		    //convert array of bytes into file 
+  		   fileOuputStream = new FileOutputStream(".\\IMAGE.jpg");  //".\\IMAGE"+nb_image+".jpg");
   		    fileOuputStream.write(bufferfile);
   		    fileOuputStream.close();
  // 		   System.out.println("written");
@@ -196,53 +202,63 @@ static void captureAndSave(int numimage) {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-  		  time = time - System.currentTimeMillis();
-         System.out.println("done! time");
+  		
+  /*********************   uncomment to get stats on command line   ***************/////////////////		
+    /* 	  time = time - System.currentTimeMillis();
+          System.out.println("done! time");
           System.out.println(time + " ms");
           System.out.println("Stored ");
           System.out.println(bufferfile.length);
           System.out.println(" byte image.");
-          
-   */     System.out.print("dataAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA5555555555555555555555"); 
-   		  System.out.flush();
-          System.out.print(bufferfile);
-          System.out.flush();
-          System.out.print("stop_data");
-          System.out.flush();
+*/   
 }
 
 static byte[]  Capture() {
-	//	int nb_image = numimage;
-      	
+	//	int nb_image = numimage;   	
       	jpglen = 30000;
-  		
       	do {
-     	     camera.sleep(2);
- 			resumeVideo();
- 			camera.sleep(2);
- 			takePicture();
- 			camera.sleep(2);
- 			jpglen = frameLength();
-     	} while (jpglen > 20000);
+    	     camera.sleep(2);
+			resumeVideo();
+			camera.sleep(2);
+			//System.out.println("resuming "+ resume);
+  
+			takePicture();
+			camera.sleep(2);
+			jpglen = frameLength();
+    	} while (jpglen > 20000);
 
         byte[] bufferfile = {(byte) 0x00};// 
 
         bufferfile = readImageData(jpglen,8192); //never reach above, thus it is a compromise 
-        camera.sleep(2);
-        ByteArrayOutputStream  image = new ByteArrayOutputStream(); 
-        try {
-			image.write(bufferfile);
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}	
         return bufferfile;
      
 }
 
+public static byte[] readImageData(int jpglen, int buffersize){
+	
+	int wCount = 0; // For counting # of writes
+	byte[] globalbuffer = new byte[0];
+  
+	while (jpglen > 0) {
 
-static String CaptureBase64() {
+
+		int bytesToRead = Math.min(buffersize, jpglen);
+		byte[] buffer = readPicture(bytesToRead,buffersize);	
+
+		if(buffer.length<buffersize) {   
+//			System.out.println("BUFFER LENTGH < "+ buffersize + " :" + buffer.length);
+		}
+			
+		globalbuffer = concat(globalbuffer, buffer);
+	
+		jpglen -= bytesToRead;
+		wCount++;
+	}
+
+//	System.out.println("done in " + wCount + " iteration");
+	return globalbuffer;
+}
+static byte[] CaptureBase64() {
 	//	int nb_image = numimage;
       	
       	jpglen = 30000;
@@ -262,24 +278,17 @@ static String CaptureBase64() {
         camera.sleep(2);
         ByteArrayOutputStream  image = new ByteArrayOutputStream(); 
         try {
-			image.write(bufferfile);
-			
+			image.write(bufferfile);		
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-   /*     byte[] Base64bufferfile =  org.apache.commons.codec.binary.Base64.encodeBase64(bufferfile);
-        String Base64output = new String(Base64bufferfile);
-     */ return  Base64.encodeBase64URLSafeString(bufferfile);
+        byte[] Base64bufferfile =  Base64.encodeBase64(bufferfile);
+  //      String Base64output = new String(Base64bufferfile);
+        return  Base64bufferfile;
     //    return Base64output;
      
 }
-
-
-
-
-
-
 
 static boolean ChangeBaudRate(int baudrate) {
 	
@@ -477,32 +486,6 @@ static int frameLength() {
 			  return runCommand(VC0706_TVOUT_CTRL, args, 5);
 			}
 
-
-	
-	public static byte[] readImageData(int jpglen, int buffersize){
-	
-		int wCount = 0; // For counting # of writes
-		byte[] globalbuffer = new byte[0];
-      
-		while (jpglen > 0) {
- 
-
-			int bytesToRead = Math.min(buffersize, jpglen);
-			byte[] buffer = readPicture(bytesToRead,buffersize);	
-  
-			if(buffer.length<buffersize) {   
-	//			System.out.println("BUFFER LENTGH < "+ buffersize + " :" + buffer.length);
-			}
-				
-			globalbuffer = concat(globalbuffer, buffer);
-		
-			jpglen -= bytesToRead;
-			wCount++;
-		}
-    
-//		System.out.println("done in " + wCount + " iteration");
-		return globalbuffer;
-}
 
 	
 	public static byte[] readPicture(int bytetoRead,int buffersize) {
