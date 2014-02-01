@@ -162,3 +162,13 @@ stabilised nod app within "kinect" project with vc0706.jar. The jar file has a b
 
 2014 01 30 :
 modified vc0706 to get the port number as a parameter, not working yet
+
+2014 01 31:
+
+VC0706 vorking with one arg as port name, if no port default is COM3. 
+Uploaded to github with VC0706_20143101.jar as exported jar file
+now ready to test on beagleboneblack target ?
+
+2014 02 01:
+update vc0706 app with 2nd arg :  if second arg is "save", then it only save image to disk
+expoted jar as VC0706_20140201.jar, updated github

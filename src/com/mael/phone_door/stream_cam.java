@@ -109,35 +109,26 @@ public static void main(String args[]) {
       resumeVideo(); 
        ByteArrayOutputStream bos = new ByteArrayOutputStream(); 
       
-/***********  END of settings phase ************/        
-  		int nb_image = 1;
-  		byte[] a = new byte[0];
-  		while (nb_image >0){
+/***********  END of settings phase ************/   
+       
+       /*****************  Branching with args(1) : if no args only stdout, if args="save" : save to disk only (.\\) ***********/     
+       if (args.length > 1 & args[1].equals("save")) {
+    	   int nb_image = 1;
+    	   byte[] a = new byte[0];
+    	   while (nb_image >0){
   			nb_image++;
-  			bos.reset();
   			a = Capture();
- // 			a = CaptureBase64(); // uncomment to set base 64 output		
-	// write bytes to bos ...
-			bos.write(a, 0, a.length);
-			System.out.print(bos);
-//  			System.out.println(a.toString());
-			System.out.flush();	
-	//		System.out.println(new String(a));
-	
-	
 			FileOutputStream fileOuputStream;		        
 			try { 
 		  		    //convert array of bytes into file 
 		  		   fileOuputStream = new FileOutputStream(".\\IMAGE.jpg");  
-		  		    fileOuputStream.write(a);
-		  		    fileOuputStream.close();
-		 // 		   System.out.println("written");
-		 
-				} catch (Exception e) {
+		  		   fileOuputStream.write(a);
+		  		   fileOuputStream.close();
+		 // 		   System.out.println("written"); 
+			} catch (Exception e) {
 					e.printStackTrace();
-					}		
-			
-// 		captureAndSave(nb_image); //uncomment to save images to disk, auto incrementation
+			  }				
+// 		captureAndSave(nb_image); //uncomment to save multiple images to disk, auto incrementation
           camera.disconnect();
           sleep(300);
           camera.connect(port,115200);
@@ -150,11 +141,42 @@ public static void main(String args[]) {
        //   	  	System.out.println("listening ");
             }
         }
-    
        sleep(10);
        conn_115200 = getVersion();  
        sleep(10);  
-  		}		
+  		}
+       }   
+     /******  STDOUT byte output only  *************/
+    	   else {   
+        	   int nb_image = 1;
+        	   byte[] a = new byte[0];
+        	   while (nb_image >0){
+      			nb_image++;
+      			bos.reset();
+      			a = Capture();
+     // 			a = CaptureBase64(); // uncomment to set base 64 output		
+    			bos.write(a, 0, a.length);    	// write bytes to bos ...
+    			System.out.print(bos);
+    			System.out.flush();		
+   
+              camera.disconnect();
+              sleep(300);
+              camera.connect(port,115200);
+     //    		System.out.println("connected" + camera.getConnected());
+          		if (camera.getConnected() == true)
+         			{//  System.out.println("connected");
+                if (camera.initIOStream() == true)
+              	{ //  System.out.println("init io");
+              	  	camera.initListener();
+           //   	  	System.out.println("listening ");
+                }
+            }
+        
+           sleep(10);
+           conn_115200 = getVersion();  
+           sleep(10);  
+    	   }
+    	 }
 }
 /**************** Functions *******/
 
