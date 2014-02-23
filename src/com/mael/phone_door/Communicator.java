@@ -75,7 +75,7 @@ public class Communicator implements SerialPortEventListener
         while (ports.hasMoreElements())
         {
             CommPortIdentifier curPort = (CommPortIdentifier)ports.nextElement();
-
+            
             //get only serial ports
             if (curPort.getPortType() == CommPortIdentifier.PORT_SERIAL)
             {

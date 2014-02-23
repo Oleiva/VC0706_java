@@ -3,6 +3,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-codec-1.9.jar"/>
-	<classpathentry exported="true" kind="lib" path="K:/mes_docs/Mael/android_app_sdk/eclise workspace/VC0706_java/lib/RXTXcomm.jar"/>
+	<classpathentry exported="true" kind="lib" path="K:/mes_docs/Mael/android_app_sdk/eclise workspace/VC0706_java/lib/rxtx-2.2pre2.jar" sourcepath="K:/mes_docs/Mael/android_app_sdk/eclise workspace/VC0706_java/lib/rxtx-2.2pre2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -170,5 +170,80 @@ Uploaded to github with VC0706_20143101.jar as exported jar file
 now ready to test on beagleboneblack target ?
 
 2014 02 01:
-update vc0706 app with 2nd arg :  if second arg is "save", then it only save image to disk
+update vc0706 app with secondary arg, if second arg is "save", it will only save to disk
 expoted jar as VC0706_20140201.jar, updated github
+
+2014 02 09 :
+Jar file not executing when downloadnig from github ; to follow up and fix
+
+2014 02 10:
+probably due to 2 usb / serial device connected, solved
+no i have the message "linux no rxtxserial in java.library.path"
+need to add rxtx in jre path  (from the web):
+"
+To fix this problem, I added the line
+Code:
+-Djava.library.path="/usr/lib/jni/"
+to the VM Options. (Right click project -> Properties -> Run). 
+"
+
+2014 02 12:
+fixed rxtx issue by adding rxtx file in  /usr/java/ejre*/lib/arm
+no having a version mismatch issue
+updated rxtx jar with 2.2pre version (latest) to avoid warning message
+still having the warning for 2.2pre1 instead of pre2 => don't care at the moment
+
+problem for accessing serial ports : /dev/ttyS1 or whatever
+need to write to stdout the oupout of listport method => to be added as a parameter
+
+2014 02 14:
+modified the jar file to set 2.2pre2 version : no more warning....
+cretaed a jar file "get_rxtx_port_ID" which provide:
+ _ a text  output to be sure that is working 
+ _ the list of serial and parallel ports
+at the writing time : no port on BBB :-(
+
+manage to get the following answer :
+ ls /dev/ttyO*
+/dev/ttyO0  /dev/ttyO2
+after adding  echo ttyO2_armhf.com > /sys/devices/bone_capemgr*/slots (from a comment in following blog 
+:http://www.armhf.com/index.php/beaglebone-black-serial-uart-device-tree-overlays-for-ubuntu-and-debian-wheezy-tty01-tty02-tty04-tty05-dtbo-files)
+
+but java -jar get_rxtx_port_ID.jar still get no port
+
+is this because ttyO2 and not ttyS2 ?
+or is this because not the good file proprties (should use chmod ?)
+
+2014 02 17:
+stty -F /dev/ttyS? gave an I/O error result for 0 to 3, while an "no such..." for 4 : done without anything connect nor declared after boot
+
+2014 02 18:
+need to try using the following
+http://thethingsystem.com/dev/Bootstrapping-the-BeagleBone-Black.html
+https://groups.google.com/forum/#!topic/beagleboard/-kHyFqZwEF4
+
+eventually
+http://papermint-designs.com/community/node/331
+
+perharps the uart is working but my java app isn't ?? ;-(
+
+
+2014 02 19:
+it seems that rxtx lib need some customisation : see there :
+http://beaglebone.cameon.net/home/doing-java-development
+The built-in serial ports on the BeagleBone isn't autmatically detected by RxTx. To add them to the list of available ports, set the "gnu.io.rxtx.SerialPorts" property to a colon-separated list of port names. You can do that in a property file, or directly on the command line:
+
+java -Dgnu.io.rxtx.SerialPorts=/dev/ttyO0:/dev/ttyO1:/dev/ttyO2:/dev/ttyO3:/dev/ttyO4:/dev/ttyO5 -Djava.library.path=/usr/lib/jni/ -cp .:/usr/share/java/rxtx.jar CommTest
+or there :
+http://fortytwoandnow.blogspot.ch/2012/10/beaglebone-serial-ports-and-multiplexing.html
+
+or even there:
+http://embeddedgeeks.wordpress.com/2012/02/26/arduino-beagleboard-serial-communication-using-java-rxtx/
+
+to be tested !
+
+2014 02 20:
+rxtx needs effectivelly some declaration :
+actually works like this (got from http://beaglebone.cameon.net/home/doing-java-development)
+java -Dgnu.io.rxtx.SerialPorts=/dev/ttyO0:/dev/ttyO1:/dev/ttyO2:/dev/ttyO3:/dev/ttyO4:/dev/ttyO5 -Djava.library.path=/usr/lib/jni/ -jar /usr/etc/portail_app/get_rxtx_port_ID.jar
+ but the launch of VC0706 doesn't get output

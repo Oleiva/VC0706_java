@@ -31,12 +31,13 @@ public static void main(String args[]) {
 	//String port = "COM3";  
 	*/
 	String port ; //= "56163"  
+	if (args.length > 0) {if (args[0].contains("help")) {System.out.println("1st arg = port, 2nd arg whatever will save to /IMAGE.jpg");}} 
 	if (args.length > 0) {	port = args[0];} 	else {port ="COM3";}
 	
 	camera.searchForPorts(); // if removed the port number below is unknown on the function "connect"...
 	camera.connect(port,115200);
 	
-//	System.out.println("connected" + camera.getConnected());
+//	System.out.println("connected  @115200 " + camera.getConnected());
       if (camera.getConnected() == true)
       { //System.out.println("connected");
           if (camera.initIOStream() == true)
@@ -44,11 +45,11 @@ public static void main(String args[]) {
         	  camera.initListener();
         	//  System.out.println("listening ");
           }
-      }
+      } else {System.out.println("port not available");}
   //  reset();// to put when app is killed
     sleep(20);
      boolean conn_115200 = getVersion();  
-  //    System.out.println("get version at 115200 bds result " + conn_115200 );
+ //     System.out.println("get version at 115200 bds result " + conn_115200 );
      
         
   if (!conn_115200) {
@@ -56,7 +57,7 @@ public static void main(String args[]) {
       sleep(20);
       camera.connect(port,38400);
   	
-  //	System.out.println("connected" + camera.getConnected());
+ // 	System.out.println("connected @38400" + camera.getConnected());
         if (camera.getConnected() == true)
         { //System.out.println("connected");
             if (camera.initIOStream() == true)
@@ -112,7 +113,8 @@ public static void main(String args[]) {
 /***********  END of settings phase ************/   
        
        /*****************  Branching with args(1) : if no args only stdout, if args="save" : save to disk only (.\\) ***********/     
-       if (args.length > 1 & args[1].equals("save")) {
+       if (args.length > 1 ) {
+    	   System.out.println("saving IMAGE to disk @ local dir");
     	   int nb_image = 1;
     	   byte[] a = new byte[0];
     	   while (nb_image >0){
@@ -121,7 +123,7 @@ public static void main(String args[]) {
 			FileOutputStream fileOuputStream;		        
 			try { 
 		  		    //convert array of bytes into file 
-		  		   fileOuputStream = new FileOutputStream(".\\IMAGE.jpg");  
+		  		   fileOuputStream = new FileOutputStream("IMAGE.jpg");  
 		  		   fileOuputStream.write(a);
 		  		   fileOuputStream.close();
 		 // 		   System.out.println("written"); 
@@ -148,6 +150,7 @@ public static void main(String args[]) {
        }   
      /******  STDOUT byte output only  *************/
     	   else {   
+    		   System.out.println("STDOUT ONLY");
         	   int nb_image = 1;
         	   byte[] a = new byte[0];
         	   while (nb_image >0){
